@@ -4,7 +4,7 @@ SRCDIR= ./Src
 OBJDIR= ./Obj
 OBJS= $(OBJDIR)/main.o $(OBJDIR)/display.o $(OBJDIR)/board.o
 
-all: main_chess
+all: init main_chess
 
 main_chess: $(OBJS)
 	@gcc $(OBJS) -o main_chess
@@ -17,6 +17,9 @@ $(OBJDIR)/display.o: $(INCDIR)/display.h $(SRCDIR)/display.c
 
 $(OBJDIR)/board.o: $(INCDIR)/board.h $(SRCDIR)/board.c
 	@gcc $(CFLAGS) -I$(INCDIR) -c $(SRCDIR)/board.c -o $@
+
+init:
+	@mkdir -p Obj
 
 rebuild_all: clean all
 
