@@ -22,10 +22,10 @@ int show_board(void) {
 }
 
 int show_board_coordinates(void) {
-	printf("      A   B   C   D   E   F   G   H\n");
+	printf("      A    B    C    D    E    F    G    H\n");
 	
 	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
-		fprintf(stdout, "    ---------------------------------\n");
+		fprintf(stdout, "    -----------------------------------------\n");
 		fprintf(stdout, "  %d ", i + 1);
 		for (int j = _A_; j < COL_COUNT; j++) {
 			
@@ -34,7 +34,7 @@ int show_board_coordinates(void) {
 		}
 		fprintf(stdout, "|\n");
 	}
-	fprintf(stdout, "    ---------------------------------\n");
+	fprintf(stdout, "    -----------------------------------------\n");
 }
 
 void show_piece(Piece piece) {

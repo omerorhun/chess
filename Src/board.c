@@ -10,6 +10,7 @@ static int8_t get_row_dist(MoveCoordinates mc);
 static Piece get_piece_type(uint8_t row, uint8_t col);
 static PieceInfo get_piece_info(uint8_t row, uint8_t col);
 static ErrorCodes check_the_route(MoveCoordinates *mc);
+static ErrorCodes check_if_rook(MoveCoordinates move);
 
 void init_board(void) {
 	
@@ -46,6 +47,35 @@ ErrorCodes make_move(MoveCoordinates move) {
 	
 	if (ret == ERR_OK) {
 		printf("Move is valid\n");
+
+		/* Check extra move */
+		ErrorCodes ret = check_if_rook(move);
+
+		printf("ret: %d\n", ret);
+		uint8_t row, col;
+
+		if (get_piece_info(move.from_r, move.from_c).color == WHITE)
+			row = _1_;
+		else
+			row = _8_;
+		
+		if (ret == ERR_OK_ROOK_SHORT) {
+			board[row][_F_].type =  board[row][_H_].type;
+			board[row][_F_].color = board[row][_H_].color;
+			board[row][_F_].is_moved = 1;
+			board[row][_H_].type = BLANK;
+			board[row][_H_].color = EMPTY;
+			board[row][_H_].is_moved = 1;
+		}
+		else if (ret == ERR_OK_ROOK_LONG) {
+			board[row][_D_].type =  board[row][_A_].type;
+			board[row][_D_].color =  board[row][_A_].color;
+			board[row][_D_].is_moved = 1;
+			board[row][_A_].type = BLANK;
+			board[row][_A_].color = EMPTY;
+			board[row][_A_].is_moved = 1;
+		}
+
 		/* Play the move */
 		board[move.to_r][move.to_c].type = board[move.from_r][move.from_c].type;
 		board[move.to_r][move.to_c].color = board[move.from_r][move.from_c].color;
@@ -87,14 +117,16 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	if (piece.type == PAWN) {
 		
 		/* İleri gitmek zorunda */
-		if (move.to_r <= move.from_r)
+		if ((move.to_r <= move.from_r) && (piece.color == WHITE))
+			return ERR_INVALID_MOVE_PAWN_MUST_GO_FORWARD;
+		else if ((move.to_r >= move.from_r) && (piece.color == BLACK))
 			return ERR_INVALID_MOVE_PAWN_MUST_GO_FORWARD;
 		
-		if ((get_col_dist(move) == 2) && (get_row_dist(move) == 0) && !piece.is_moved) {
+		if ((abs(get_col_dist(move)) == 2) && (get_row_dist(move) == 0) && !piece.is_moved) {
 			/* 2 kare ileri */
 			return ERR_OK;
 		}
-		else if (get_col_dist(move) == 1) {
+		else if (abs(get_col_dist(move)) == 1) {
 			if (get_row_dist(move) == 0) {
 				/* Tek kare ileri */
 				return ERR_OK;
@@ -112,6 +144,7 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 				return ERR_OK;
 			}
 		}
+
 		return ERR_INVALID_MOVE;
 	}
 	else if (piece.type == BISHOP) {
@@ -146,18 +179,25 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	}
 	else if (piece.type == KING) {
 		/* TODO: Çevresindeki karelere mi hareket ediyor */
-		if ((abs(get_col_dist(move)) > 1) || (abs(get_row_dist(move)) > 1))
-			return ERR_INVALID_MOVE_KING_WRONG_WAY;
+		if ((abs(get_col_dist(move)) <= 1) && (abs(get_row_dist(move)) <= 1))
+			return ERR_OK;
+		
 		/* TODO: Rook kontrolü */
-		if (piece.is_moved)
-			return ERR_INVALID_MOVE_ROOK;
-
 		if (get_col_dist(move) == 0) {
-			uint8_t is_lrook_moved = get_piece_info(0,0).is_moved;
-			uint8_t is_rrook_moved = get_piece_info(7,7).is_moved;
+			PieceInfo left = get_piece_info(0,0);
+			PieceInfo right = get_piece_info(7,7);
+			uint8_t is_lrook_moved = (left.type == ROOK) ? left.is_moved : 1;
+			uint8_t is_rrook_moved = (right.type == ROOK) ? right.is_moved : 1;
 
-			if ((get_row_dist(move) == 2 && !is_rrook_moved)
-			|| (get_row_dist(move) == -2 && !is_lrook_moved)) {
+			printf("right: %hhu\n", right.type);
+			printf("rook dist: %d\n", get_row_dist(move));
+
+			if ((get_row_dist(move) == 2 && !is_rrook_moved) ||
+				(get_row_dist(move) == -2 && !is_lrook_moved))
+			{
+				if (piece.is_moved)
+					return ERR_INVALID_MOVE_ROOK;
+				
 				return ERR_OK;
 			}
 			else {
@@ -213,4 +253,31 @@ ErrorCodes check_the_route(MoveCoordinates *mc) {
 	}
 
 	return ERR_OK;
+}
+
+ErrorCodes check_if_rook(MoveCoordinates move) {
+	PieceInfo piece = get_piece_info(move.from_r, move.from_c);
+
+	if (piece.is_moved)
+		return ERR_INVALID_MOVE_ROOK;
+
+	if (get_col_dist(move) == 0) {
+		uint8_t row = (piece.color == WHITE)? 0 : 7;
+		PieceInfo left = get_piece_info(row, 0);
+		PieceInfo right = get_piece_info(row, 7);
+		uint8_t is_lrook_moved = (left.type == ROOK) ? left.is_moved : 1;
+		uint8_t is_rrook_moved = (right.type == ROOK) ? right.is_moved : 1;
+
+		if (get_row_dist(move) == 2 && !is_rrook_moved) {
+			
+			return ERR_OK_ROOK_SHORT;
+		}
+		else if (get_row_dist(move) == -2 && !is_lrook_moved) {
+			
+			return ERR_OK_ROOK_LONG;
+		}
+		else {
+			return ERR_INVALID_MOVE_ROOK;
+		}
+	}
 }

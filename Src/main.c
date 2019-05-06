@@ -23,14 +23,13 @@ int main() {
 	system("clear");
 	
 	show_board();
-	show_board_coordinates();
 	
 	while (1) {
 		memset(human_input, 0, sizeof(human_input));
 		
 		/* RegEx ifadesinin başında bir boşluk bırakmak gerekiyor (neden) */
 		scanf(" %[^\n\r]", human_input);
-		
+		system("clear");
 		ErrorCodes ret_parse = parse_human_input(human_input, &mc);
 		if (ret_parse != ERR_OK) {
 			printf("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
@@ -43,10 +42,9 @@ int main() {
 			continue;
 		}
 		
-		system("clear");
+		
 
 		show_board();
-		show_board_coordinates();
 	}
 	
 	return 0;
