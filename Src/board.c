@@ -12,6 +12,8 @@ static PieceInfo get_piece_info(uint8_t row, uint8_t col);
 static ErrorCodes check_the_route(MoveCoordinates *mc);
 static ErrorCodes check_if_rook(MoveCoordinates move);
 
+PieceColor g_turn = WHITE;
+
 void init_board(void) {
 	
 	/* Fill board with pieces to start position */
@@ -52,12 +54,8 @@ ErrorCodes make_move(MoveCoordinates move) {
 		ErrorCodes ret = check_if_rook(move);
 
 		printf("ret: %d\n", ret);
-		uint8_t row, col;
-
-		if (get_piece_info(move.from_r, move.from_c).color == WHITE)
-			row = _1_;
-		else
-			row = _8_;
+		uint8_t row;
+		row = (get_piece_info(move.from_r, move.from_c).color == WHITE) ? _1_ : _8_;
 		
 		if (ret == ERR_OK_ROOK_SHORT) {
 			board[row][_F_].type =  board[row][_H_].type;
@@ -96,12 +94,16 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	PieceInfo target = board[move.to_r][move.to_c];
 	ErrorCodes ret = ERR_OK;
 
-	if (target.type != BLANK)
-		return ERR_TEST;
+	// if (target.type != BLANK)
+	// 	return ERR_TEST;
 	
 	if (piece.type == BLANK)
 		return ERR_BLANK_MOVE;
 
+	/* TODO: Hamle sırasını kontrol et */
+	if (piece.color != g_turn)
+		return ERR_WRONG_TURN;
+	
 	/* TODO: Taş açmazda mı kontrol et */
 	if (piece.is_locked)
 		return ERR_INVALID_MOVE_LOCKED_PIECE;
@@ -184,8 +186,11 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 		
 		/* TODO: Rook kontrolü */
 		if (get_col_dist(move) == 0) {
-			PieceInfo left = get_piece_info(0,0);
-			PieceInfo right = get_piece_info(7,7);
+			uint8_t row;
+			row = (get_piece_info(move.from_r, move.from_c).color == WHITE) ? _1_ : _8_;
+				
+			PieceInfo left = get_piece_info(row, 0);
+			PieceInfo right = get_piece_info(row, 7);
 			uint8_t is_lrook_moved = (left.type == ROOK) ? left.is_moved : 1;
 			uint8_t is_rrook_moved = (right.type == ROOK) ? right.is_moved : 1;
 

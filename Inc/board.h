@@ -93,6 +93,10 @@ typedef struct {
 	uint8_t to_r;
 }MoveCoordinates;
 
+typedef enum {
+	WHITE_TURN = 0, BLACK_TURN = !WHITE_TURN
+}MoveTurn;
+
 /* TODO: Burada kaldi const struct elemanlarina ilk degerleri atanacak */
 extern PieceInfo board[ROW_COUNT][COL_COUNT];
 

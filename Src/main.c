@@ -14,6 +14,8 @@ PieceInfo board[ROW_COUNT][COL_COUNT] = STARTING_POSITION;
 
 ErrorCodes parse_human_input(char *human_input, MoveCoordinates *move);
 
+extern PieceColor g_turn;
+
 int main() {
 	MoveCoordinates mc;
 	char human_input[HUMAN_INPUT_SIZE];
@@ -33,17 +35,16 @@ int main() {
 		ErrorCodes ret_parse = parse_human_input(human_input, &mc);
 		if (ret_parse != ERR_OK) {
 			printf("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
-			continue;
 		}
 		
 		ErrorCodes ret = make_move(mc);
 		if (ret != ERR_OK) {
 			printf("Wrong move (Error %d)\n", ret);
-			continue;
+		}
+		else {
+			g_turn = (g_turn == WHITE) ? BLACK : WHITE;
 		}
 		
-		
-
 		show_board();
 	}
 	
