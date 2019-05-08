@@ -7,6 +7,9 @@
 
 #include "display.h"
 #include "board.h"
+#include "locale.h"
+
+#include "version.h"
 
 #define HUMAN_INPUT_SIZE 16
 
@@ -15,15 +18,16 @@ PieceInfo board[ROW_COUNT][COL_COUNT] = STARTING_POSITION;
 ErrorCodes parse_human_input(char *human_input, MoveCoordinates *move);
 
 extern PieceColor g_turn;
+extern Coordinates g_enpassant;
 
 int main() {
 	MoveCoordinates mc;
 	char human_input[HUMAN_INPUT_SIZE];
 	
-	init_board();
-	
+	setlocale(LC_CTYPE, "");
 	system("clear");
-	
+	set_colors(WHITE, 0);
+	clog(" Version: %s\n\n", VER_FILEVERSION_STR);
 	show_board();
 	
 	while (1) {
@@ -34,18 +38,19 @@ int main() {
 		system("clear");
 		ErrorCodes ret_parse = parse_human_input(human_input, &mc);
 		if (ret_parse != ERR_OK) {
-			printf("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
+			show_board();
+			clog("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
+			continue;
 		}
-		
+		clog("enpassant: %hhu-%hhu", g_enpassant.row, g_enpassant.col);
 		ErrorCodes ret = make_move(mc);
+		show_board();
 		if (ret != ERR_OK) {
-			printf("Wrong move (Error %d)\n", ret);
+			clog("Wrong move (Error %d)\n", ret);
 		}
 		else {
 			g_turn = (g_turn == WHITE) ? BLACK : WHITE;
-		}
-		
-		show_board();
+		}	
 	}
 	
 	return 0;

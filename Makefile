@@ -4,7 +4,7 @@ SRCDIR= ./Src
 OBJDIR= ./Obj
 OBJS= $(OBJDIR)/main.o $(OBJDIR)/display.o $(OBJDIR)/board.o
 
-all: init main_chess
+all: init main_chess incver
 
 main_chess: $(OBJS)
 	@gcc $(OBJS) -o main_chess
@@ -20,6 +20,9 @@ $(OBJDIR)/board.o: $(INCDIR)/board.h $(SRCDIR)/board.c
 
 init:
 	@mkdir -p Obj
+
+incver:
+	@Version/incver.sh
 
 rebuild_all: clean all
 

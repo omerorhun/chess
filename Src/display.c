@@ -7,131 +7,91 @@
 #define DARK_FG "38;5;16"
 #define DARK_BG "48;5;52"
 
-static void reset_color();
-static void set_fg_color(int x);
-static void set_bg_color(int x);
+#define PRINT_UPPER_BOARD() clog(" ");\
+	set_colors(WHITE, DARK);\
+	clog("   \e[4m A  B  C  D  E  F  G  H \e[0m");\
+	set_colors(0, DARK);\
+	clog("  \n");\
+	reset_colors()
+
+#define PRINT_LOWER_BOARD() clog(" ");\
+	set_colors(0, DARK);\
+	clog("                             ");\
+	reset_colors();\
+	clog("\n")
+
+#define PRINT_LEFT_SIDE_OF_BOARD() clog(" ");\
+		set_colors(WHITE, DARK);\
+		clog(" %d|", i + 1)
+
+#define PRINT_RIGHT_SIDE_OF_BOARD() set_colors(WHITE, DARK);\
+		clog("  \n");\
+		reset_colors()
 
 static char get_piece(Piece piece);
-static void show_piece(Piece piece);
 
 int show_board(void) {
-	fprintf(stdout, " ");
-	set_fg_color(0);
-	set_bg_color(1);
-	fprintf(stdout, "   \033[4m A  B  C  D  E  F  G  H ");
-	reset_color();
-	set_bg_color(1);
-	fprintf(stdout, "  \n");
-	reset_color();
 	
+	PRINT_UPPER_BOARD();
 	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
-		fprintf(stdout, " ");	
-		set_fg_color(0);
-		set_bg_color(1);
-		fprintf(stdout, " %d|", i + 1);
 		
+		PRINT_LEFT_SIDE_OF_BOARD();
 		for (int j = _A_; j < COL_COUNT; j++) {
-			(board[i][j].color == WHITE) ? set_fg_color(0) : set_fg_color(1);
-			((i+j)%2) ? set_bg_color(0) : set_bg_color(1);
+			(board[i][j].color == WHITE) ? set_colors(WHITE, 0) : set_colors(BLACK, 0);
+			((i+j)%2) ? set_colors(0, LIGHT) : set_colors(0, DARK);
 			
-			fprintf(stdout, " %c ", get_piece(board[i][j].type));
-			reset_color();
+			clog(" %lc ", board[i][j].type ? board[i][j].type : ' ');
+			reset_colors();
 		}
-		set_fg_color(0);
-		set_bg_color(1);
-		fprintf(stdout, "  \n");
-		reset_color();
+		PRINT_RIGHT_SIDE_OF_BOARD();
 	}
-	fprintf(stdout, " ");
-	set_bg_color(1);
-	fprintf(stdout, "                             ");
-	reset_color();
-	fprintf(stdout, "\n");
-}
-
-int show_board_coordinates(void) {
-	printf("      A    B    C    D    E    F    G    H\n");
-	
-	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
-		fprintf(stdout, "    -----------------------------------------\n");
-		fprintf(stdout, "  %d ", i + 1);
-		for (int j = _A_; j < COL_COUNT; j++) {
-			
-			//fprintf(stdout, "| %c ", get_piece(board[i][j].type));
-			fprintf(stdout, "| %hhu%hhu ", board[i][j].location.col, board[i][j].location.row);
-		}
-		fprintf(stdout, "|\n");
-	}
-	fprintf(stdout, "    -----------------------------------------\n");
-}
-
-void show_piece(Piece piece) {
-	switch (piece) {
-		case PAWN:
-			fputc('P', stdout);
-			break;
-		case KNIGHT:
-			fputc('K', stdout);
-			break;
-		case BISHOP:
-			fputc('B', stdout);
-			break;
-		case ROOK:
-			fputc('R', stdout);
-			break;
-		case QUEEN:
-			fputc('Q', stdout);
-			break;
-		case KING:
-			fputc('K', stdout);
-			break;
-		case BLANK:
-			fputc(' ', stdout);
-			break;
-		default:
-			/* Error */
-			fputc('X', stdout);
-			break;
-		
-	}
+	PRINT_LOWER_BOARD();
 }
 
 char get_piece(Piece piece) {
+	
 	switch (piece) {
-		case PAWN:
-			return 'P';
-		case KNIGHT:
-			return 'N';
-		case BISHOP:
-			return 'B';
-		case ROOK:
-			return 'R';
-		case QUEEN:
-			return 'Q';
-		case KING:
-			return 'K';
-		case BLANK:
-			return ' ';
+		case PAWN: return 'P';
+		case KNIGHT: return 'N';
+		case BISHOP: return 'B';
+		case ROOK: return 'R';
+		case QUEEN: return 'Q';
+		case KING: return 'K';
+		case BLANK: return ' ';
 		default:
 			/* Error */
 			return 'X';
 	}
 }
 
-void set_bg_color(int x) {
-    if (x == 0)
-        printf("\033[40;"LIGHT_BG"m");
-    else
-        printf("\033[40;"DARK_BG"m");
+void set_colors(PieceColor fg, BoardColor bg) {
+
+	if (fg == WHITE)
+        clog("\e[1;"LIGHT_FG"m");
+    else if (fg == BLACK)
+        clog("\e[1;"DARK_FG"m");
+	
+    if (bg == LIGHT)
+        clog("\e[40;"LIGHT_BG"m");
+    else if (bg == DARK)
+        clog("\e[40;"DARK_BG"m");
 }
 
-void set_fg_color(int x) {
-    if (x == 0)
-        printf("\033[1;"LIGHT_FG"m");
-    else
-        printf("\033[1;"DARK_FG"m");
+void reset_colors() {
+    clog("\e[0m");
 }
-
-void reset_color() {
-    printf("\033[0m");
+#if 0
+int show_board_coordinates(void) {
+	clog("      A    B    C    D    E    F    G    H\n");
+	
+	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
+		clog("    -----------------------------------------\n");
+		clog("  %d ", i + 1);
+		for (int j = _A_; j < COL_COUNT; j++) {
+			clog("| %hhu%hhu ", board[i][j].location.col, board[i][j].location.row);
+		}
+		clog("|\n");
+	}
+	clog("    -----------------------------------------\n");
 }
+#endif
