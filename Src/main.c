@@ -11,9 +11,12 @@
 
 #include "version.h"
 
+#include "test.h"
+
 #define HUMAN_INPUT_SIZE 16
 
 PieceInfo board[ROW_COUNT][COL_COUNT] = STARTING_POSITION;
+//PieceInfo board[ROW_COUNT][COL_COUNT] = TEST_POSITION_ROOK_8;
 
 ErrorCodes parse_human_input(char *human_input, MoveCoordinates *move);
 
@@ -27,7 +30,7 @@ int main() {
 	setlocale(LC_CTYPE, "");
 	system("clear");
 	set_colors(WHITE, 0);
-	clog(" Version: %s\n\n", VER_FILEVERSION_STR);
+	log(" Version: %s\n\n", VER_FILEVERSION_STR);
 	show_board();
 	
 	while (1) {
@@ -39,17 +42,18 @@ int main() {
 		ErrorCodes ret_parse = parse_human_input(human_input, &mc);
 		if (ret_parse != ERR_OK) {
 			show_board();
-			clog("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
+			dlog("Wrong input format!\nFormat: <from> <to>\nExample: e2 e4\n");
 			continue;
 		}
-		clog("enpassant: %hhu-%hhu", g_enpassant.row, g_enpassant.col);
+		dlog("enpassant: %hhu-%hhu\n", g_enpassant.row, g_enpassant.col);
 		ErrorCodes ret = make_move(mc);
 		show_board();
 		if (ret != ERR_OK) {
-			clog("Wrong move (Error %d)\n", ret);
+			dlog("Wrong move (Error %d)\n", ret);
 		}
 		else {
 			g_turn = (g_turn == WHITE) ? BLACK : WHITE;
+			dlog("turn is %d\n", g_turn);
 		}	
 	}
 	

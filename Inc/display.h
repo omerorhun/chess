@@ -5,6 +5,11 @@
 #include "board.h"
 #include "debug.h"
 
+typedef enum {
+	LIGHT = 1,
+	DARK = 2
+}BoardColor;
+
 extern int show_board(void);
 extern int show_board_coordinates(void);
 extern void set_colors(PieceColor fg, BoardColor bg);
