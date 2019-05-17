@@ -88,10 +88,12 @@ typedef struct {
 
 typedef struct {
 	/* TODO: Coordinates tipinde tanımlanabilir */
-	uint8_t from_r;
-	uint8_t from_c;
-	uint8_t to_r;
-	uint8_t to_c;
+	Coordinates from;
+	Coordinates to;
+	// uint8_t from_r;
+	// uint8_t from_c;
+	// uint8_t to_r;
+	// uint8_t to_c;
 }MoveCoordinates;
 
 typedef enum {
