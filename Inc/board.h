@@ -63,12 +63,12 @@ typedef struct {
 
 typedef enum {
 	BLANK,
-	PAWN = 0x265F,
-	KNIGHT = 0x265E,
-	BISHOP = 0x265D,
-	ROOK = 0x265C,
-	QUEEN = 0x265B,
-	KING = 0x265A
+	PAWN = (1 << 1), //0x265F,
+	KNIGHT = (1 << 2), //0x265E,
+	BISHOP = (1 << 3), //0x265D,
+	ROOK = (1 << 4), //0x265C,
+	QUEEN = (1 << 5), //0x265B,
+	KING = (1 << 6), //0x265A
 }Piece;
 
 typedef enum {

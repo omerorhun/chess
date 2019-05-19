@@ -66,7 +66,7 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	/* TODO: Taş açmazda mı kontrol et */
 	if (piece.is_locked)
 		return ERR_INVALID_MOVE_LOCKED_PIECE;
-
+	
 	/* TODO: İlk ve son konumun farklı olduğunu kontrol et */
 	if (abs(get_row_dist(move)) + abs(get_col_dist(move)) == 0)
 		return ERR_INVALID_MOVE_WRONG_COORDINATES;

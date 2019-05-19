@@ -29,6 +29,7 @@
 		reset_colors()
 
 static char get_piece(Piece piece);
+static wchar_t get_piece_unicode(Piece piece);
 
 int show_board(void) {
 	
@@ -40,7 +41,8 @@ int show_board(void) {
 			(board[i][j].color == WHITE) ? set_colors(WHITE, 0) : set_colors(BLACK, 0);
 			((i+j)%2) ? set_colors(0, LIGHT) : set_colors(0, DARK);
 			
-			disp(" %lc ", board[i][j].type ? board[i][j].type : ' ');
+			//disp(" %lc ", board[i][j].type ? board[i][j].type : ' ');
+			disp(" %lc ", get_piece_unicode(board[i][j].type));
 			reset_colors();
 		}
 		PRINT_RIGHT_SIDE_OF_BOARD();
@@ -57,6 +59,22 @@ char get_piece(Piece piece) {
 		case ROOK: return 'R';
 		case QUEEN: return 'Q';
 		case KING: return 'K';
+		case BLANK: return ' ';
+		default:
+			/* Error */
+			return 'X';
+	}
+}
+
+wchar_t get_piece_unicode(Piece piece) {
+	
+	switch (piece) {
+		case PAWN: return 0x265F;
+		case KNIGHT: return 0x265E;
+		case BISHOP: return 0x265D;
+		case ROOK: return 0x265C;
+		case QUEEN: return 0x265B;
+		case KING: return 0x265A;
 		case BLANK: return ' ';
 		default:
 			/* Error */
