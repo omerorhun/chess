@@ -29,7 +29,6 @@
 		reset_colors()
 
 static char get_piece(Piece piece);
-static wchar_t get_piece_unicode(Piece piece);
 
 int show_board(void) {
 	
@@ -98,18 +97,133 @@ void set_colors(PieceColor fg, BoardColor bg) {
 void reset_colors() {
     disp("\e[0m");
 }
-#if 0
-int show_board_coordinates(void) {
-	disp("      A    B    C    D    E    F    G    H\n");
+
+#if NCURSES_ENABLED
+ErrorCodes init_display(void) {
+	
+	if(has_colors())
+		return ERR_NO_COLOR_SUPPORT;
+	
+	initscr();
+	cbreak();
+	noecho();
+	
+	start_color();
+	use_default_colors();
+	
+	init_color(COLOR_LIGHT, 204, 102, 0);
+	init_color(COLOR_DARK, 153, 76, 0);
+	init_color(COLOR_BLACK, 0, 0, 0);
+	
+	init_pair(DARK_WHITE, COLOR_WHITE, COLOR_DARK);
+	init_pair(DARK_BLACK, COLOR_BLACK, COLOR_DARK);
+	init_pair(LIGHT_WHITE, COLOR_WHITE, COLOR_LIGHT);
+	init_pair(LIGHT_BLACK, COLOR_BLACK, COLOR_LIGHT);
+	init_pair(WHITE_ON_DEFAULT, COLOR_WHITE, -1);
+	
+	init_pair(SELECT_DARK_WHITE, COLOR_WHITE, COLOR_BLUE);
+	init_pair(SELECT_DARK_BLACK, COLOR_BLACK, COLOR_BLUE);
+	init_pair(SELECT_LIGHT_WHITE, COLOR_WHITE, COLOR_BLUE);
+	init_pair(SELECT_LIGHT_BLACK, COLOR_BLACK, COLOR_BLUE);
+	
+	return ERR_OK;
+}
+
+void nc_draw_board(WINDOW **window, int h, int w, int y, int x) {
+	if (*window == NULL) {
+		*window = newwin(h, w, y, x);
+	}
+	
+	wattron(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
+	mvwprintw(*window, 1, 1, "   A  B  C  D  E  F  G  H ");
+	box(*window, 0, 0);
+	wattroff(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
 	
 	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
-		disp("    -----------------------------------------\n");
-		disp("  %d ", i + 1);
+		wattron(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
+		mvwprintw(*window, i + 2, 1, "%d", i+1);
+		wattroff(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
 		for (int j = _A_; j < COL_COUNT; j++) {
-			disp("| %hhu%hhu ", board[i][j].location.col, board[i][j].location.row);
-		}
-		disp("|\n");
+			int colors = 0;
+			
+			if (board[i][j].color == WHITE) {
+				colors = ((i+j)%2) ? LIGHT_WHITE : DARK_WHITE;
+			}
+			else {
+				colors = ((i+j)%2) ? LIGHT_BLACK : DARK_BLACK;
+			}
+			
+			wattron(*window, COLOR_PAIR(colors));
+			mvwprintw(*window, 7 - i+2, 3*j+3, " %lc ", get_piece_unicode(board[i][j].type));
+			wattroff(*window, COLOR_PAIR(colors));
+		}	
 	}
-	disp("    -----------------------------------------\n");
+	
+	refresh();
+	wrefresh(*window);
 }
+
+void nc_display_move(MoveCoordinates mc) {
+	int colors = ((mc.from.row + mc.from.col) % 2) ? LIGHT_BLACK : DARK_BLACK;
+	
+	wattron(winboard, COLOR_PAIR(colors));
+	mvwprintw(winboard, 7 - mc.from.row + 2, 3 * mc.from.col + 3, "   ");
+	wattroff(winboard, COLOR_PAIR(colors));
+	
+	if (board[mc.to.row][mc.to.col].color == WHITE)
+		colors = ((mc.to.row + mc.to.col) % 2) ? LIGHT_WHITE : DARK_WHITE;
+	else
+		colors = ((mc.to.row + mc.to.col) % 2) ? LIGHT_BLACK : DARK_BLACK;
+	
+	wattron(winboard, COLOR_PAIR(colors));
+	mvwprintw(winboard, 7 - mc.to.row + 2, 3 * mc.to.col + 3, " %lc ", 
+				get_piece_unicode(board[mc.to.row][mc.to.col].type));
+	wattroff(winboard, COLOR_PAIR(colors));
+	
+	wrefresh(winboard);
+	refresh();
+}
+
+void focus_square(int x, int y) {
+	static int prev_x = -1;
+	static int prev_y = -1;
+	wchar_t wch = get_piece_unicode(board[7-y][x].type);
+	int colors;
+	
+	if (board[7-y][x].color == WHITE)
+		colors = ((y + x) % 2) ? SELECT_LIGHT_WHITE : SELECT_DARK_WHITE;
+	else
+		colors = ((y + x) % 2) ? SELECT_LIGHT_BLACK : SELECT_DARK_BLACK;
+	
+	wattron(winboard, COLOR_PAIR(colors));
+	mvwprintw(winboard, y + 2, 3 * x + 3, " %lc ", wch);
+	wattroff(winboard, COLOR_PAIR(colors));
+	
+	/* Unfocus previous square */
+	if (!((prev_x == -1) && (prev_y == -1))) {
+		dlog("unfocus");
+		wch = get_piece_unicode(board[7-prev_y][prev_x].type);
+		
+		if (board[7-prev_y][prev_x].color == BLACK)
+			colors = ((prev_y + prev_x) % 2) ? LIGHT_WHITE : DARK_WHITE;
+		else
+			colors = ((prev_y + prev_x) % 2) ? LIGHT_BLACK : DARK_BLACK;
+
+		wattron(winboard, COLOR_PAIR(colors));
+		mvwprintw(winboard, prev_y + 2, 3 * prev_x + 3, " %lc ", wch);
+		wattroff(winboard, COLOR_PAIR(colors));
+		prev_x = -1;
+		prev_y = -1;
+	}
+	else 
+	{
+		prev_x = x;
+		prev_y = y;
+	}
+}
+
+void show_current_board(void) {
+	nc_draw_board(&winboard_test, BOARD_BOX_HEIGHT, BOARD_BOX_WIDTH, BOARD_BOX_Y + 20, BOARD_BOX_X);
+}
+
 #endif

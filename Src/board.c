@@ -19,6 +19,8 @@ MoveTurn g_turn = WHITE;
 Coordinates g_enpassant;
 ExtraMove g_extra_move;
 
+/* TODO: Oyunculara ait taşları belirten struct oluştur hamleleri oradan kontrol et */
+
 ErrorCodes make_move(MoveCoordinates move) {
 	ErrorCodes ret = ERR_OK;
 	
@@ -454,14 +456,14 @@ uint8_t is_square_safe(Coordinates square, MoveTurn turn) {
 	}
 	else {
 		if (((square.col + 1) <= _H_) &&
-			(board[square.row - 1][square.col + 1].color == BLACK) &&
+			(board[square.row - 1][square.col + 1].color == WHITE) &&
 			(board[square.row - 1][square.col + 1].type == PAWN))
 		{
 			dlog("pawn 3\n");
 			return 0;
 		}
 		else if (((square.col - 1) >= _A_) &&
-			(board[square.row - 1][square.col - 1].color == BLACK) &&
+			(board[square.row - 1][square.col - 1].color == WHITE) &&
 			(board[square.row - 1][square.col - 1].type == PAWN))
 		{
 			dlog("pawn 4\n");

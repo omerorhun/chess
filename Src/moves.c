@@ -215,23 +215,15 @@ Coordinates find_king(Coordinates target, PieceColor color) {
 				{0,-2}, {0,2}};
     
     Coordinates start = {ROW_COUNT, COL_COUNT};
-    uint8_t count = 0;
 
     for (int i = 0; i < 11; i++) {
-        if ((target.row + kv[i][0] >= _1_) && (target.row + kv[i][0] <= _8_) &&
-            (target.col + kv[i][1] >= _A_) && (target.col + kv[i][1] <= _H_) &&
-            (board[target.row + kv[i][0]][target.col + kv[i][1]].color == color) &&
+        if ((board[target.row + kv[i][0]][target.col + kv[i][1]].color == color) &&
             (board[target.row + kv[i][0]][target.col + kv[i][1]].type == KING)) 
         {
-            dlog("knight\n");
-            if (++count > 1) {
-                start.row = ROW_COUNT;
-                start.col = COL_COUNT;
-                break;
-            }
+            dlog("king\n");
             
+			start.row = target.row + kv[i][0];
             start.col = target.col + kv[i][1];
-            start.row = target.row + kv[i][0];
         }
     }
 
