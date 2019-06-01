@@ -17,6 +17,7 @@ typedef enum {
 extern void init_input(void);
 extern InputStates get_mouse_input(MoveCoordinates *mc);
 extern void init_mouse(void);
+extern void refresh_move(MoveCoordinates *mc);
 #endif
 
 extern ErrorCodes parse_human_input(char *human_input, MoveCoordinates *move);

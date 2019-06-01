@@ -54,6 +54,7 @@ extern void focus_square(int x, int y);
 WINDOW *winboard_test;
 
 void show_current_board(void);
+void unfocus(int x, int y);
 
 #endif
 

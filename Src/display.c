@@ -108,6 +108,7 @@ ErrorCodes init_display(void) {
 	cbreak();
 	noecho();
 	
+	curs_set(0);
 	start_color();
 	use_default_colors();
 	
@@ -185,11 +186,13 @@ void nc_display_move(MoveCoordinates mc) {
 }
 
 void focus_square(int x, int y) {
-	static int prev_x = -1;
-	static int prev_y = -1;
+	
+	if (y > 7 || y < 0 || x > 8 || x < 0)
+		return;
+		
 	wchar_t wch = get_piece_unicode(board[7-y][x].type);
 	int colors;
-	
+	dlog("focus %d-%d", x, y);
 	if (board[7-y][x].color == WHITE)
 		colors = ((y + x) % 2) ? SELECT_LIGHT_WHITE : SELECT_DARK_WHITE;
 	else
@@ -198,28 +201,25 @@ void focus_square(int x, int y) {
 	wattron(winboard, COLOR_PAIR(colors));
 	mvwprintw(winboard, y + 2, 3 * x + 3, " %lc ", wch);
 	wattroff(winboard, COLOR_PAIR(colors));
-	
-	/* Unfocus previous square */
-	if (!((prev_x == -1) && (prev_y == -1))) {
-		dlog("unfocus");
-		wch = get_piece_unicode(board[7-prev_y][prev_x].type);
-		
-		if (board[7-prev_y][prev_x].color == BLACK)
-			colors = ((prev_y + prev_x) % 2) ? LIGHT_WHITE : DARK_WHITE;
-		else
-			colors = ((prev_y + prev_x) % 2) ? LIGHT_BLACK : DARK_BLACK;
+}
 
-		wattron(winboard, COLOR_PAIR(colors));
-		mvwprintw(winboard, prev_y + 2, 3 * prev_x + 3, " %lc ", wch);
-		wattroff(winboard, COLOR_PAIR(colors));
-		prev_x = -1;
-		prev_y = -1;
-	}
-	else 
-	{
-		prev_x = x;
-		prev_y = y;
-	}
+void unfocus(int x, int y) {
+	dlog("unfocus %d-%d", x, y);
+	
+	if (y > 7 || y < 0 || x > 8 || x < 0)
+		return;
+	
+	wchar_t wch = get_piece_unicode(board[7-y][x].type);
+	int colors;
+	
+	if (board[7-y][x].color == BLACK)
+		colors = ((y + x) % 2) ? LIGHT_WHITE : DARK_WHITE;
+	else
+		colors = ((y + x) % 2) ? LIGHT_BLACK : DARK_BLACK;
+
+	wattron(winboard, COLOR_PAIR(colors));
+	mvwprintw(winboard, 7-y + 2, 3 * x + 3, " %lc ", wch);
+	wattroff(winboard, COLOR_PAIR(colors));
 }
 
 void show_current_board(void) {

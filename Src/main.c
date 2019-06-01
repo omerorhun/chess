@@ -36,7 +36,9 @@ ErrorCodes init(void);
 int main() {
 	MoveCoordinates mc;
 	char human_input[HUMAN_INPUT_SIZE];
-		
+	
+	mc.from.row = 8;
+	
 	if(init() != ERR_OK) {
 		printf("Terminal doesn't support colors\n");
 		return 0;
@@ -75,8 +77,6 @@ int main() {
 		}
 		
 		InputStates ret_in = get_mouse_input(&mc);
-		dlog("from: %d-%d", mc.from.col, mc.from.row);
-		dlog("from: %d-%d", mc.to.col, mc.to.row);
 #elif NOTATION_ENABLED
 		ErrorCodes ret_parse = parse_notation(human_input, &mc);
 #else
@@ -97,14 +97,18 @@ int main() {
 			
 			if (ret != ERR_OK) {
 				dlog("Wrong move (Error %d)\n", ret);
+				unfocus(mc.from.col, mc.from.row);
+				refresh_move(&mc);
 			}
 			else {
 				nc_display_move(mc);
 				memset(&mc, 0, sizeof(MoveCoordinates));
+				mc.from.row = 8;
 				g_turn = (g_turn == WHITE) ? BLACK : WHITE;
 			}
 		}
-		
+		dlog("from: %d-%d", mc.from.col, mc.from.row);
+		dlog("from: %d-%d", mc.to.col, mc.to.row);
 		show_current_board();
 		
 #if !NCURSES_ENABLED

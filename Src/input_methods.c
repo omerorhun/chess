@@ -293,32 +293,37 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 				dlog("xt-yt: %d-%d", xt ,7-yt);
 				dlog("type: %d", board[7-yt][xt].type);
 				
+				if (yt > 7 || yt < 0 || xt > 8 || xt < 0) {
+					unfocus(mc->from.col, mc->from.row);
+					refresh_move(mc);
+					return INPUT_WAITING_FIRST_COORDINATE;
+				}
+				
 				if (mevt.bstate & BUTTON1_CLICKED) {
 					wchar_t wch = get_piece_unicode(board[7-yt][xt].type);
 					dlog("wch: %lc", wch);
 					focus_square(xt, yt);
 					
-					switch(step) {
-						case 0:
-							dlog("case 0");
-							if ((wch >= 0x265A) && (wch <= 0x265F)) {
-								/* Determine 'from' coordinates */
-								mc->from.row = 7 - yt;
-								mc->from.col = xt;
-								step++;
-								ret = INPUT_WAITING_SECOND_COORDINATE;
-							}
-							break;
-							
-						case 1:
-							dlog("case 1");
-							/* Determine 'to' coordinates */
-							mc->to.row = 7 - yt;
-							mc->to.col = xt;
-							step = 0;
-							ret = INPUT_READY;
-							break;
+					if (mc->from.row == 8) {
+						dlog("case 0");
+						if ((wch >= 0x265A) && (wch <= 0x265F)) {
+							/* Determine 'from' coordinates */
+							mc->from.row = 7 - yt;
+							mc->from.col = xt;
+							step++;
+							ret = INPUT_WAITING_SECOND_COORDINATE;
+						}
 					}
+					else {
+						dlog("case 1");
+						/* Determine 'to' coordinates */
+						mc->to.row = 7 - yt;
+						mc->to.col = xt;
+						step = 0;
+						ret = INPUT_READY;
+					}
+					
+					
 				}
 			}
 			break;
@@ -329,4 +334,14 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 	
 	return ret;
 }
+
+void refresh_move(MoveCoordinates *mc) {
+	if (mc->to.row > 7 || mc->to.col < 0 || mc->from.row > 8 || mc->from.col < 0)
+		return;
+	mc->from.row = mc->to.row;
+	mc->from.col = mc->to.col;
+	mc->to.row = 0;
+	mc->to.col = 0;
+}
+
 #endif
