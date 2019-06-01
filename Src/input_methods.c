@@ -268,8 +268,6 @@ void init_input(void) {
 }
 
 void init_mouse(void) {
-	mvprintw(20, 40, "test string");
-	refresh();
 	/* Init mouse */
 	mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     keypad(winboard, TRUE);
@@ -278,7 +276,6 @@ void init_mouse(void) {
 InputStates get_mouse_input(MoveCoordinates *mc) {
 	InputStates ret = INPUT_WAITING_FIRST_COORDINATE;
 	MEVENT mevt;
-	static int step = 0;
 	int ch = wgetch(winboard);
 	
 	switch (ch) {
@@ -286,12 +283,6 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 			if (getmouse(&mevt) == OK) {
 				int xt = (mevt.x - 2)/3 - 1;
 				int yt = mevt.y - 1 - 2;
-				
-				dlog("mx-my: %d-%d", mevt.x - 2, mevt.y - 1);
-				dlog("mx-my: %d-%d", ((mevt.x - 2)/3)*3 + 1, (mevt.y - 1));
-				dlog("mx-my: %d-%d", ((mevt.x - 2)/3) - 1, (mevt.y - 1) - 2);
-				dlog("xt-yt: %d-%d", xt ,7-yt);
-				dlog("type: %d", board[7-yt][xt].type);
 				
 				if (yt > 7 || yt < 0 || xt > 8 || xt < 0) {
 					unfocus(mc->from.col, mc->from.row);
@@ -301,43 +292,43 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 				
 				if (mevt.bstate & BUTTON1_CLICKED) {
 					wchar_t wch = get_piece_unicode(board[7-yt][xt].type);
-					dlog("wch: %lc", wch);
 					focus_square(xt, yt);
 					
 					if (mc->from.row == 8) {
-						dlog("case 0");
 						if ((wch >= 0x265A) && (wch <= 0x265F)) {
 							/* Determine 'from' coordinates */
 							mc->from.row = 7 - yt;
 							mc->from.col = xt;
-							step++;
 							ret = INPUT_WAITING_SECOND_COORDINATE;
 						}
 					}
 					else {
-						dlog("case 1");
 						/* Determine 'to' coordinates */
 						mc->to.row = 7 - yt;
 						mc->to.col = xt;
-						step = 0;
 						ret = INPUT_READY;
 					}
-					
-					
 				}
 			}
-			break;
-			
-		default:
 			break;
 	}
 	
 	return ret;
 }
 
+/******************************************************************************
+ * @name:	refresh_move
+ * @desc:	Call when wrong move for refreshing move coordinates struct
+ * @param:	*mc pointer to move coordinates struct
+ * @retval:	None
+ *****************************************************************************/
 void refresh_move(MoveCoordinates *mc) {
-	if (mc->to.row > 7 || mc->to.col < 0 || mc->from.row > 8 || mc->from.col < 0)
+	if ((mc->to.row > 7) || (mc->to.col < 0) || 
+		(mc->from.row > 8) || (mc->from.col < 0))
+	{
 		return;
+	}
+	
 	mc->from.row = mc->to.row;
 	mc->from.col = mc->to.col;
 	mc->to.row = 0;

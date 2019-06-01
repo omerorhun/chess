@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "display.h"
 
+#if NCURSES_ENABLED
 void init_log(void) {
     line_log = 1;
     winlogs = newwin(30, 50, 1, 80);
@@ -11,3 +12,4 @@ void init_log(void) {
 	refresh();
 	wrefresh(winlogs);
 }
+#endif

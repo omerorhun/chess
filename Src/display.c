@@ -40,7 +40,6 @@ int show_board(void) {
 			(board[i][j].color == WHITE) ? set_colors(WHITE, 0) : set_colors(BLACK, 0);
 			((i+j)%2) ? set_colors(0, LIGHT) : set_colors(0, DARK);
 			
-			//disp(" %lc ", board[i][j].type ? board[i][j].type : ' ');
 			disp(" %lc ", get_piece_unicode(board[i][j].type));
 			reset_colors();
 		}
@@ -108,7 +107,8 @@ ErrorCodes init_display(void) {
 	cbreak();
 	noecho();
 	
-	curs_set(0);
+	curs_set(0); /* Hide the cursor */
+	
 	start_color();
 	use_default_colors();
 	
@@ -121,7 +121,6 @@ ErrorCodes init_display(void) {
 	init_pair(LIGHT_WHITE, COLOR_WHITE, COLOR_LIGHT);
 	init_pair(LIGHT_BLACK, COLOR_BLACK, COLOR_LIGHT);
 	init_pair(WHITE_ON_DEFAULT, COLOR_WHITE, -1);
-	
 	init_pair(SELECT_DARK_WHITE, COLOR_WHITE, COLOR_BLUE);
 	init_pair(SELECT_DARK_BLACK, COLOR_BLACK, COLOR_BLUE);
 	init_pair(SELECT_LIGHT_WHITE, COLOR_WHITE, COLOR_BLUE);
@@ -142,20 +141,19 @@ void nc_draw_board(WINDOW **window, int h, int w, int y, int x) {
 	
 	for (int i = ROW_COUNT - 1; i >= _1_; i--) {
 		wattron(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
-		mvwprintw(*window, i + 2, 1, "%d", i+1);
+		mvwprintw(*window, i + 2, 1, "%d", 8-i);
 		wattroff(*window, COLOR_PAIR(WHITE_ON_DEFAULT));
 		for (int j = _A_; j < COL_COUNT; j++) {
 			int colors = 0;
 			
-			if (board[i][j].color == WHITE) {
+			if (board[i][j].color == WHITE)
 				colors = ((i+j)%2) ? LIGHT_WHITE : DARK_WHITE;
-			}
-			else {
+			else
 				colors = ((i+j)%2) ? LIGHT_BLACK : DARK_BLACK;
-			}
 			
 			wattron(*window, COLOR_PAIR(colors));
-			mvwprintw(*window, 7 - i+2, 3*j+3, " %lc ", get_piece_unicode(board[i][j].type));
+			mvwprintw(*window, 7 - i+2, 3*j+3, " %lc ", 
+						get_piece_unicode(board[i][j].type));
 			wattroff(*window, COLOR_PAIR(colors));
 		}	
 	}
@@ -164,6 +162,12 @@ void nc_draw_board(WINDOW **window, int h, int w, int y, int x) {
 	wrefresh(*window);
 }
 
+/******************************************************************************
+ * @name	nc_display_move
+ * @desc	Displays the move
+ * @param	mc: Move struct (must be valid move)
+ * @retval	None
+ *****************************************************************************/
 void nc_display_move(MoveCoordinates mc) {
 	int colors = ((mc.from.row + mc.from.col) % 2) ? LIGHT_BLACK : DARK_BLACK;
 	
@@ -185,14 +189,21 @@ void nc_display_move(MoveCoordinates mc) {
 	refresh();
 }
 
+/******************************************************************************
+ * @name	focus_square
+ * @desc	focus on specified coordinates
+ * @param	x: Column number
+ * 			y: Row number (in display)
+ * @retval	None
+ *****************************************************************************/
 void focus_square(int x, int y) {
-	
+	dlog("focus %d-%d", x, y);
 	if (y > 7 || y < 0 || x > 8 || x < 0)
 		return;
 		
 	wchar_t wch = get_piece_unicode(board[7-y][x].type);
 	int colors;
-	dlog("focus %d-%d", x, y);
+	
 	if (board[7-y][x].color == WHITE)
 		colors = ((y + x) % 2) ? SELECT_LIGHT_WHITE : SELECT_DARK_WHITE;
 	else
@@ -203,27 +214,46 @@ void focus_square(int x, int y) {
 	wattroff(winboard, COLOR_PAIR(colors));
 }
 
+/******************************************************************************
+ * @name	unfocus
+ * @desc	Clear the focus of previous square
+ * @param	x: Column number
+ * 			y: Row number (in real)
+ * @retval	None
+ *****************************************************************************/
 void unfocus(int x, int y) {
 	dlog("unfocus %d-%d", x, y);
-	
 	if (y > 7 || y < 0 || x > 8 || x < 0)
 		return;
 	
-	wchar_t wch = get_piece_unicode(board[7-y][x].type);
+	wchar_t wch = get_piece_unicode(board[y][x].type);
 	int colors;
 	
-	if (board[7-y][x].color == BLACK)
+	if (board[y][x].color == WHITE)
 		colors = ((y + x) % 2) ? LIGHT_WHITE : DARK_WHITE;
 	else
 		colors = ((y + x) % 2) ? LIGHT_BLACK : DARK_BLACK;
 
 	wattron(winboard, COLOR_PAIR(colors));
-	mvwprintw(winboard, 7-y + 2, 3 * x + 3, " %lc ", wch);
+	mvwprintw(winboard, 7 - y + 2, 3 * x + 3, " %lc ", wch);
 	wattroff(winboard, COLOR_PAIR(colors));
 }
 
 void show_current_board(void) {
 	nc_draw_board(&winboard_test, BOARD_BOX_HEIGHT, BOARD_BOX_WIDTH, BOARD_BOX_Y + 20, BOARD_BOX_X);
+}
+
+void show_valid_squares(PieceInfo pinfo) {
+	
+	if (pinfo.type == PAWN) {
+		
+		
+		
+		if (!pinfo.is_moved) {
+			
+		}
+	}
+	
 }
 
 #endif

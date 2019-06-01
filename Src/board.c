@@ -15,6 +15,8 @@ static ErrorCodes check_if_enpassant(MoveCoordinates move);
 
 static uint8_t is_square_safe(Coordinates square, MoveTurn turn);
 
+static PieceColor get_opponent(MoveTurn turn);
+
 MoveTurn g_turn = WHITE;
 Coordinates g_enpassant;
 ExtraMove g_extra_move;
@@ -28,7 +30,7 @@ ErrorCodes make_move(MoveCoordinates move) {
 	ret = check_move_if_valid(move);
 	
 	if (ret == ERR_OK) {
-
+		
 		/* Check extra move */
 		if (g_extra_move == SHORT_ROOK) {
 			MoveCoordinates move_rook = {move.from.row, _H_, move.to.row, _F_};
@@ -39,13 +41,15 @@ ErrorCodes make_move(MoveCoordinates move) {
 			move_piece(&move_rook);
 		}
 		else if (g_extra_move == ENPASSANT) {
+			/* TODO: Rakibin son hamlesinde yapıldığını kontrol et */
+			dlog("enp %d-%d", g_enpassant.col, g_enpassant.row);
 			board[g_enpassant.row][g_enpassant.col].type = BLANK;
 			board[g_enpassant.row][g_enpassant.col].color = EMPTY;
 			memset(&g_enpassant, 0, sizeof(Coordinates));
 		}
 		
 		g_extra_move = NO_EXTRA_MOVE;
-
+		
 		/* Play the move */
 		move_piece(&move);
 	}
@@ -56,12 +60,12 @@ ErrorCodes make_move(MoveCoordinates move) {
 ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	PieceInfo piece = board[move.from.row][move.from.col];
 	PieceInfo target = board[move.to.row][move.to.col];
-	ErrorCodes ret = ERR_OK;
+	ErrorCodes ret = ERR_INVALID_MOVE;
 	
 	if (piece.type == BLANK)
 		return ERR_BLANK_MOVE;
-
-	/* TODO: Hamle sırasını kontrol et */
+	
+	/* TEST: Hamle sırasını kontrol et */
 	if (piece.color != g_turn)
 		return ERR_WRONG_TURN;
 	
@@ -69,11 +73,11 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 	if (piece.is_locked)
 		return ERR_INVALID_MOVE_LOCKED_PIECE;
 	
-	/* TODO: İlk ve son konumun farklı olduğunu kontrol et */
+	/* TEST: İlk ve son konumun farklı olduğunu kontrol et */
 	if (abs(get_row_dist(move)) + abs(get_col_dist(move)) == 0)
 		return ERR_INVALID_MOVE_WRONG_COORDINATES;
 	
-	/* TODO: Hedef konumda bizim taşımız olmadığını kontrol et */
+	/* TEST: Hedef konumda bizim taşımız olmadığını kontrol et */
 	if (get_piece_info(move.to.row, move.to.col).color == get_piece_info(move.from.row, move.from.col).color)
 		return ERR_INVALID_MOVE_FRIENDLY_FIRE;
 	
@@ -88,17 +92,18 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 		if ((abs(get_col_dist(move)) == 2) && 
 			(get_row_dist(move) == 0) && 
 			!piece.is_moved && 
-			(get_piece_info(move.to.row, move.to.col).type == BLANK))
+			(get_piece_type(move.to.row, move.to.col) == BLANK))
 		{
 			/* 2 kare ileri */
-			dlog("en passant available\n");
 			g_enpassant.row = move.to.row;
 			g_enpassant.col = move.to.col;
+			dlog("enpassant available %d-%d", g_enpassant.col, g_enpassant.row);
+			
 			return ERR_OK;
 		}
 		else if (abs(get_col_dist(move)) == 1) {
 			if ((get_row_dist(move) == 0) && 
-				(get_piece_info(move.to.row, move.to.col).type == BLANK))
+				(get_piece_type(move.to.row, move.to.col) == BLANK))
 			{
 				/* Tek kare ileri */
 				return ERR_OK;
@@ -111,7 +116,7 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 				
 				/* TODO: Geçerken alma */
 				/* Yanda piyon olduğunu ve son hamlede iki ileri sürüldüğünü kontrol et */
-				if (check_if_enpassant(move) == ERR_OK) {
+				if ((ret = check_if_enpassant(move)) == ERR_OK) {
 					g_extra_move = ENPASSANT;
 				}
 				
@@ -122,7 +127,7 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 		return ERR_INVALID_MOVE;
 	}
 	else if (piece.type == BISHOP) {
-		/* TODO: Hareket çapraz mı kontrol et */
+		/* TEST: Hareket çapraz mı kontrol et */
 		if (abs(get_row_dist(move)) != abs(get_col_dist(move)))
 			return ERR_INVALID_MOVE_BISHOP_NOT_DIAGONAL;
 
@@ -130,19 +135,19 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 		return check_the_route(&move);
 	}
 	else if (piece.type == KNIGHT) {
-		/* TODO: Hareket L şeklinde mi kontrol et */
+		/* TEST: Hareket L şeklinde mi kontrol et */
 		if (abs(get_col_dist(move) * get_row_dist(move)) != 2)
 			return ERR_INVALID_MOVE_KNIGHT_NOT_L;
 	}
 	else if (piece.type == ROOK) {
-		/* TODO: Hareket düz mü kontrol et */
+		/* TEST: Hareket düz mü kontrol et */
 		if (get_col_dist(move) * get_row_dist(move) != 0)
 			return ERR_INVALID_MOVE_ROOK_NOT_STRAIGHT;
 		/* TEST: Hareket yolunda üzerinden atlanan taş var mı */
 		return check_the_route(&move);
 	}
 	else if (piece.type == QUEEN) {
-		/* TODO: Hareket düz veya çapraz mı kontrol et */
+		/* TEST: Hareket düz veya çapraz mı kontrol et */
 		if (!((get_col_dist(move) * get_row_dist(move) == 0) ||
 			(abs(get_row_dist(move)) == abs(get_col_dist(move))))) {
 			return ERR_INVALID_MOVE_QUEEN_NOT_STRAIGHT_OR_DIAGONAL;
@@ -151,11 +156,11 @@ ErrorCodes check_move_if_valid(MoveCoordinates move) {
 		return check_the_route(&move);
 	}
 	else if (piece.type == KING) {
-		/* TODO: Çevresindeki karelere mi hareket ediyor */
+		/* TEST: Çevresindeki karelere mi hareket ediyor */
 		if ((abs(get_col_dist(move)) <= 1) && (abs(get_row_dist(move)) <= 1))
 			return ERR_OK;
 		
-		/* TODO: Rook kontrolü */
+		/* TEST: Rook kontrolü */
 		return check_if_rook(move);
 	}
 	
@@ -219,7 +224,7 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 	
 	if (get_col_dist(move) == 0) {
 		if ((get_row_dist(move) == 2) && !(board[move.from.row][_H_].is_moved)) {
-			/* TODO: Yol üzerinde taş var mı kontrol et */
+			/* TEST: Yol üzerinde taş var mı kontrol et */
 			MoveCoordinates way = {{move.from.row, move.from.col}, {move.to.row, _H_}};
 			
 			 dlog("checking route %d\n", __LINE__);
@@ -228,7 +233,7 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 			if (check_the_route(&way) != ERR_OK)
 				return ERR_INVALID_MOVE_NOT_CLEAR_ROUTE;
 
-			/* TODO: Yolu gören rakip taş var mı kontrol et */
+			/* TEST: Yolu gören rakip taş var mı kontrol et */
 			for (int i = move.from.col + 1; i <= move.to.col; i++) {
 				Coordinates coor = {move.from.row, i};
 				if (!is_square_safe(coor, g_turn))
@@ -240,7 +245,7 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 			return ERR_OK;
 		}
 		else if(get_row_dist(move) == -2 && !(board[move.from.row][_A_].is_moved)) {
-			/* TODO: Yol üzerinde taş var mı kontrol et */
+			/* TEST: Yol üzerinde taş var mı kontrol et */
 			MoveCoordinates way = {{move.from.row, move.from.col}, {move.to.row, _A_}};
 			
 			 dlog("checking route %d\n", __LINE__);
@@ -249,7 +254,7 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 			if (check_the_route(&way) != ERR_OK)
 				return ERR_INVALID_MOVE_NOT_CLEAR_ROUTE;
 
-			/* TODO: Yolu gören rakip taş var mı kontrol et */
+			/* TEST: Yolu gören rakip taş var mı kontrol et */
 			for (int i = move.from.col - 1; i >= move.to.col; i--) {
 				Coordinates coor = {move.from.row, i};
 				if (!is_square_safe(coor, g_turn))
@@ -263,8 +268,6 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 
 		return ERR_INVALID_MOVE_ROOK;
 	}
-	
-	
 }
 
 ErrorCodes check_if_enpassant(MoveCoordinates move) {
@@ -272,7 +275,7 @@ ErrorCodes check_if_enpassant(MoveCoordinates move) {
 	if (abs(get_row_dist(move) == 1) && (move.to.col == g_enpassant.col)) {
 		return ERR_OK;
 	}
-
+	
 	return ERR_NOT_ENPASSANT_MOVE;
 }
 
@@ -473,4 +476,11 @@ uint8_t is_square_safe(Coordinates square, MoveTurn turn) {
 
 	dlog("safety check end\n");
 	return 1;
+}
+
+PieceColor get_opponent(MoveTurn turn) {
+	if (turn == WHITE_TURN)
+		return BLACK;
+	else
+		return WHITE;
 }
