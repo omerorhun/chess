@@ -16,15 +16,24 @@
 #define disp(format, args...) printw(format, ##args)
 
 #if DEBUG_ENABLED
-#define dlog(format, args...) mvwprintw(winlogs, line_log++, 1, format, ##args), refresh(), wrefresh(winlogs)
+#define dlog(format, args...) {if (line_log >= 35) {\
+col_log += 50;\
+col_log %= 100;\
+ if (col_log == 1) {\
+ 	wclear(winlogs);\
+	box(winlogs, 0, 0);\
+}\
+line_log = 1;}\
+mvwprintw(winlogs, line_log++, col_log, format, ##args),\
+refresh(), wrefresh(winlogs);}
 #else
 #define dlog(format, args...) 
 #endif
 
-
 WINDOW *winlogs;
 extern void init_log(void);
 int line_log;
+int col_log;
 
 #else
 #define log(format, args...) wprintf(L""format, ##args)

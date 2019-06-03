@@ -278,6 +278,8 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 	MEVENT mevt;
 	int ch = wgetch(winboard);
 	
+	static int xx = 2;
+	
 	switch (ch) {
 		case KEY_MOUSE:
 			if (getmouse(&mevt) == OK) {
@@ -310,6 +312,50 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 					}
 				}
 			}
+			break;
+		case KEY_UP:
+			show_list(moves);
+			break;
+		
+		case KEY_LEFT:
+		{
+			if (xx == 1) {
+				current_move = get_prev(current_move);
+			}
+			
+			if (current_move == NULL)
+				break;
+			MoveCoordinates invert = {current_move->mc.to, current_move->mc.from};
+			dlog("back: %d - %d-%d ~ %d-%d", current_move->no,
+								 invert.from.row, invert.from.col,
+									invert.to.row, invert.to.col);
+			move_piece(invert);
+			dlog("line: %d", __LINE__);
+			nc_display_move(invert);
+			dlog("line: %d", __LINE__);
+			
+			dlog("line: %d", __LINE__);
+			xx = 1;
+			break;
+		}
+		case KEY_RIGHT:
+			if (xx == 0) {
+				current_move = get_next(current_move);
+			}
+			if (current_move == NULL)
+				break;
+				
+			dlog("forward: %d - %d-%d ~ %d-%d", current_move->no, 
+						current_move->mc.from.row, current_move->mc.from.col,
+							current_move->mc.to.row, current_move->mc.to.col);
+			
+			move_piece(current_move->mc);
+			dlog("line: %d", __LINE__);
+			nc_display_move(current_move->mc);
+			dlog("line: %d", __LINE__);
+			
+			dlog("line: %d", __LINE__);
+			xx = 0;
 			break;
 	}
 	

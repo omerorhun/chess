@@ -64,11 +64,11 @@ int main() {
 		// line_log = 1;
 		
 		dlog(" ");
-		if (line_log > 20) {
-			wclear(winlogs);
-			box(winlogs, 0, 0);
-			line_log = 1;
-		}
+		// if (line_log > 20) {
+		// 	wclear(winlogs);
+		// 	box(winlogs, 0, 0);
+		// 	line_log = 1;
+		// }
 		
 		InputStates ret_in = get_mouse_input(&mc);
 		

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "board.h"
+#include "display.h"
+#include "moves.h"
 
 static ErrorCodes check_move_if_valid(MoveCoordinates move);
 static int8_t get_col_dist(MoveCoordinates mc);
@@ -10,7 +12,6 @@ static Piece get_piece_type(uint8_t row, uint8_t col);
 static PieceInfo get_piece_info(uint8_t row, uint8_t col);
 static ErrorCodes check_the_route(MoveCoordinates *mc);
 static ErrorCodes check_if_rook(MoveCoordinates move);
-static void move_piece(MoveCoordinates *move);
 static ErrorCodes check_if_enpassant(MoveCoordinates move);
 
 static uint8_t is_square_safe(Coordinates square, MoveTurn turn);
@@ -33,25 +34,32 @@ ErrorCodes make_move(MoveCoordinates move) {
 		
 		/* Check extra move */
 		if (g_extra_move == SHORT_ROOK) {
+			/* TEST: kareyi yenile */
 			MoveCoordinates move_rook = {move.from.row, _H_, move.to.row, _F_};
-			move_piece(&move_rook);
+			move_piece(move_rook);
+			nc_display_move(move_rook);
 		}
 		else if(g_extra_move == LONG_ROOK) {
+			/* TEST: kareyi yenile */
 			MoveCoordinates move_rook = {move.from.row, _A_, move.to.row, _D_};
-			move_piece(&move_rook);
+			move_piece(move_rook);
+			nc_display_move(move_rook);
 		}
 		else if (g_extra_move == ENPASSANT) {
-			/* TODO: Rakibin son hamlesinde yapıldığını kontrol et */
+			/* TEST: kareyi yenile */
 			dlog("enp %d-%d", g_enpassant.col, g_enpassant.row);
 			board[g_enpassant.row][g_enpassant.col].type = BLANK;
 			board[g_enpassant.row][g_enpassant.col].color = EMPTY;
+			remove_piece(g_enpassant.row, g_enpassant.col);
 			memset(&g_enpassant, 0, sizeof(Coordinates));
 		}
 		
 		g_extra_move = NO_EXTRA_MOVE;
 		
 		/* Play the move */
-		move_piece(&move);
+		move_piece(move);
+		/* TODO: Hamleyi ağaca ekle */
+		current_move = add(&moves, move);
 	}
 	
 	return ret;
@@ -271,21 +279,23 @@ ErrorCodes check_if_rook(MoveCoordinates move) {
 }
 
 ErrorCodes check_if_enpassant(MoveCoordinates move) {
-	
-	if (abs(get_row_dist(move) == 1) && (move.to.col == g_enpassant.col)) {
+	dlog("enpcol: %d", g_enpassant.col);
+	dlog("tocol: %d", move.to.col);
+	if ((abs(get_row_dist(move)) == 1) && (move.to.col == g_enpassant.col)) {
 		return ERR_OK;
 	}
 	
 	return ERR_NOT_ENPASSANT_MOVE;
 }
 
-void move_piece(MoveCoordinates *move) {
-	board[move->to.row][move->to.col].type = board[move->from.row][move->from.col].type;
-	board[move->to.row][move->to.col].color = board[move->from.row][move->from.col].color;
-	board[move->to.row][move->to.col].is_moved = 1;
-	board[move->from.row][move->from.col].type = BLANK;
-	board[move->from.row][move->from.col].color = EMPTY;
-	board[move->from.row][move->from.col].is_moved = 1;
+void move_piece(MoveCoordinates move) {
+	dlog("move piece");
+	board[move.to.row][move.to.col].type = board[move.from.row][move.from.col].type;
+	board[move.to.row][move.to.col].color = board[move.from.row][move.from.col].color;
+	board[move.to.row][move.to.col].is_moved = 1;
+	board[move.from.row][move.from.col].type = BLANK;
+	board[move.from.row][move.from.col].color = EMPTY;
+	board[move.from.row][move.from.col].is_moved = 1;
 }
 
 uint8_t is_square_safe(Coordinates square, MoveTurn turn) {

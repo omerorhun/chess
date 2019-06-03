@@ -1,6 +1,11 @@
+#include <stdlib.h>
 #include "moves.h"
 
 extern MoveTurn g_turn;
+
+MoveList *moves = NULL;
+MoveList *current_move = NULL;
+int move_count = 0;
 
 Coordinates find_starting_point(Coordinates target, Piece attacker) {
     
@@ -228,4 +233,148 @@ Coordinates find_king(Coordinates target, PieceColor color) {
     }
 
     return start;
+}
+
+void init_moves(void) {
+	moves = NULL;
+}
+
+MoveList *add(MoveList **root, MoveCoordinates new_move) {
+    MoveList **temp = root;
+    MoveList *p_prev = NULL;
+    
+    while (*temp != NULL) {
+        p_prev = (*temp);
+        temp = &(*temp)->next;
+    }
+    
+    *temp = malloc(sizeof(MoveList));
+    if (*temp == NULL)
+        return NULL;
+	
+    (*temp)->no = move_count++;
+    (*temp)->mc = new_move;
+    (*temp)->prev = p_prev;
+    (*temp)->next = NULL;
+    
+    return *temp;
+}
+
+MoveList *add_to(MoveList **root, int index, MoveCoordinates new_move) {
+    MoveList **temp = root;
+    MoveList *p_prev = NULL;
+    MoveList *p_next = NULL;
+    
+    while (index--) {
+        p_prev = *(temp);
+        temp = &(*temp)->next;
+    }
+    
+    p_next = *temp;
+    *temp = (MoveList *)malloc(sizeof(MoveList));
+    if (*temp == NULL)
+        return NULL;
+    
+	p_next->prev = *temp;
+	(*temp)->no = move_count++;
+    (*temp)->mc = new_move;
+    (*temp)->next = p_next;
+    (*temp)->prev = p_prev;
+    
+    return *temp;
+}
+
+MoveList *get(MoveList *root, int index) {
+    MoveList *temp = root;
+    int i = 0;
+    
+    while (i++ < index)
+        temp = temp->next;
+    
+    return temp;
+}
+
+MoveList *get_prev(MoveList *node) {
+	
+	if (node->prev == NULL) {
+		dlog("prev null");
+		return node;
+	}
+	else if (node->prev->next == NULL) {
+		dlog("endf");
+	}
+	else if (node->prev->prev == NULL) {
+		dlog("endp");
+	}
+	
+    return node->prev;
+}
+
+MoveList *get_next(MoveList *node) {
+	
+	if (node->next == NULL) {
+		dlog("next null");
+		return node;
+	}
+	else if (node->next->next == NULL) {
+		dlog("endff");
+	}
+	else if (node->next->prev == NULL) {
+		dlog("endpp");
+	}
+	
+    return node->next;
+}
+
+MoveList *get_tail(MoveList *node) {
+    while (node->next != NULL) {
+        node = node->next;
+    }
+    
+    return node;
+}
+
+MoveList *get_head(MoveList *node) {
+    while (node->prev != NULL) {
+        node = node->prev;
+    }
+    
+    return node;
+}
+
+void remove_move(MoveList *node) {
+    free(node);
+}
+
+void remove_from(MoveList *node) {
+    MoveList *iter = node;
+    
+    while (iter->next != NULL) {
+        iter = iter->next;
+    }
+    
+    while (iter != node) {
+        iter = iter->prev;
+        
+        free(iter->next);
+        iter->next = NULL;
+    }
+}
+
+void show_list(MoveList *root) {
+	MoveList *iter = root;
+	
+	while (iter != NULL) {
+		dlog("%d - from: %d-%d, to: %d-%d p: %p, n: %p", 
+			iter->no, iter->mc.from.row, iter->mc.from.col, 
+				iter->mc.to.row, iter->mc.to.col, iter->prev, iter->next);
+		iter = iter->next;
+	}
+	
+	if (current_move != NULL) {
+		dlog("%d - current: %d-%d, %d-%d p: %p, n: %p", current_move->no, 
+			current_move->mc.from.row, current_move->mc.from.col,
+				current_move->mc.to.row, current_move->mc.to.col,
+					current_move->prev, current_move->next);
+	}
 }

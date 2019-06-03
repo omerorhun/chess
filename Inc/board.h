@@ -110,5 +110,6 @@ typedef enum {
 extern PieceInfo board[ROW_COUNT][COL_COUNT];
 
 ErrorCodes make_move(MoveCoordinates move);
+extern void move_piece(MoveCoordinates move);
 
 #endif /* __BOARD_H_ */

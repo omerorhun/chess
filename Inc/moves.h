@@ -4,6 +4,31 @@
 #include "board.h"
 #include "error.h"
 
+
+typedef struct move_list{
+    int no;
+    MoveCoordinates mc;
+    struct move_list *prev;
+    struct move_list *next;
+}MoveList;
+
+extern MoveList *moves;
+extern MoveList *current_move;
+extern int move_count;
+
+extern MoveList *add(MoveList **root, MoveCoordinates new_mc_data);
+extern MoveList *add_to(MoveList **root, int index, MoveCoordinates new_mc_data);
+extern MoveList *get(MoveList *root, int index);
+extern MoveList *get_next(MoveList *node);
+extern MoveList *get_prev(MoveList *node);
+
+extern MoveList *get_head(MoveList *node);
+extern MoveList *get_tail(MoveList *node);
+extern void remove_from(MoveList *node);
+extern void remove_move(MoveList *node);
+
+void show_list(MoveList *root);
+
 extern Coordinates find_king(Coordinates target, PieceColor color);
 extern Coordinates find_knight(Coordinates target, PieceColor color);
 

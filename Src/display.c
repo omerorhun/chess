@@ -189,6 +189,14 @@ void nc_display_move(MoveCoordinates mc) {
 	refresh();
 }
 
+void remove_piece(int row, int col) {
+	int colors = ((row + col) % 2) ? LIGHT_BLACK : DARK_BLACK;
+	
+	wattron(winboard, COLOR_PAIR(colors));
+	mvwprintw(winboard, 7 - row + 2, 3 * col + 3, "   ");
+	wattroff(winboard, COLOR_PAIR(colors));
+}
+
 /******************************************************************************
  * @name	focus_square
  * @desc	focus on specified coordinates
@@ -255,5 +263,7 @@ void show_valid_squares(PieceInfo pinfo) {
 	}
 	
 }
+
+
 
 #endif

@@ -53,8 +53,9 @@ extern void focus_square(int x, int y);
 
 WINDOW *winboard_test;
 
-void show_current_board(void);
-void unfocus(int x, int y);
+extern void show_current_board(void);
+extern void unfocus(int x, int y);
+extern void remove_piece(int row, int col);
 
 #endif
 
