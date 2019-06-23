@@ -278,7 +278,7 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 	MEVENT mevt;
 	int ch = wgetch(winboard);
 	
-	static int xx = 2;
+	static enHistory history = HISTORY_NONE;
 	
 	switch (ch) {
 		case KEY_MOUSE:
@@ -309,6 +309,7 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 						mc->to.row = 7 - yt;
 						mc->to.col = xt;
 						ret = INPUT_READY;
+						history = HISTORY_NONE;
 					}
 				}
 			}
@@ -319,12 +320,12 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 		
 		case KEY_LEFT:
 		{
-			if (xx == 1) {
+			if (history == HISTORY_PREV)
 				current_move = get_prev(current_move);
-			}
 			
-			if (current_move == NULL)
+			if ((current_move == NULL) || (history == HISTORY_BEGIN))
 				break;
+			
 			MoveCoordinates invert = {current_move->mc.to, current_move->mc.from};
 			dlog("back: %d - %d-%d ~ %d-%d", current_move->no,
 								 invert.from.row, invert.from.col,
@@ -334,17 +335,23 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 			nc_display_move(invert);
 			dlog("line: %d", __LINE__);
 			
-			dlog("line: %d", __LINE__);
-			xx = 1;
+			history = HISTORY_PREV;
+			
+			if (get_prev(current_move) == current_move)
+				history = HISTORY_BEGIN;
+			else
+				ret = INPUT_HISTORY_MOVE;
+			
 			break;
 		}
 		case KEY_RIGHT:
-			if (xx == 0) {
+		{
+			if (history == HISTORY_NEXT)
 				current_move = get_next(current_move);
-			}
-			if (current_move == NULL)
+			
+			if ((current_move == NULL) || (history == HISTORY_END))
 				break;
-				
+			
 			dlog("forward: %d - %d-%d ~ %d-%d", current_move->no, 
 						current_move->mc.from.row, current_move->mc.from.col,
 							current_move->mc.to.row, current_move->mc.to.col);
@@ -354,9 +361,15 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 			nc_display_move(current_move->mc);
 			dlog("line: %d", __LINE__);
 			
-			dlog("line: %d", __LINE__);
-			xx = 0;
+			history = HISTORY_NEXT;
+			
+			if (get_next(current_move) == current_move)
+				history = HISTORY_END;
+			else
+				ret = INPUT_HISTORY_MOVE;
+			
 			break;
+		}
 	}
 	
 	return ret;
@@ -364,7 +377,7 @@ InputStates get_mouse_input(MoveCoordinates *mc) {
 
 /******************************************************************************
  * @name:	refresh_move
- * @desc:	Call when wrong move for refreshing move coordinates struct
+ * @desc:	Call when wrong move for refreshing 'move coordinates struct'
  * @param:	*mc pointer to move coordinates struct
  * @retval:	None
  *****************************************************************************/

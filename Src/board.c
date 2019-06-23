@@ -58,7 +58,16 @@ ErrorCodes make_move(MoveCoordinates move) {
 		
 		/* Play the move */
 		move_piece(move);
+		
+		dlog("move is adding to tree\n");
 		/* TODO: Hamleyi ağaca ekle */
+		if (current_move != get_tail(current_move)) {
+			dlog("removing..\n");
+			remove_from(current_move);
+		}
+			
+		dlog("adding..\n");
+		
 		current_move = add(&moves, move);
 	}
 	

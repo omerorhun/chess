@@ -327,6 +327,10 @@ MoveList *get_next(MoveList *node) {
 }
 
 MoveList *get_tail(MoveList *node) {
+	
+	if (node == NULL)
+		return NULL;
+	
     while (node->next != NULL) {
         node = node->next;
     }
@@ -335,6 +339,10 @@ MoveList *get_tail(MoveList *node) {
 }
 
 MoveList *get_head(MoveList *node) {
+	
+	if (node == NULL)
+		return NULL;
+	
     while (node->prev != NULL) {
         node = node->prev;
     }
@@ -349,6 +357,9 @@ void remove_move(MoveList *node) {
 void remove_from(MoveList *node) {
     MoveList *iter = node;
     
+	if (iter == NULL)
+		return;
+	
     while (iter->next != NULL) {
         iter = iter->next;
     }
@@ -359,6 +370,9 @@ void remove_from(MoveList *node) {
         free(iter->next);
         iter->next = NULL;
     }
+	iter = iter->prev;
+	free(iter->next);
+	iter->next = NULL;
 }
 
 void show_list(MoveList *root) {

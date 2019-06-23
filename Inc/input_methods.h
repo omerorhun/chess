@@ -11,8 +11,17 @@ int line_in;
 typedef enum {
     INPUT_READY,
     INPUT_WAITING_FIRST_COORDINATE,
-    INPUT_WAITING_SECOND_COORDINATE
+    INPUT_WAITING_SECOND_COORDINATE,
+    INPUT_HISTORY_MOVE
 }InputStates;
+
+typedef enum {
+    HISTORY_NONE,
+    HISTORY_NEXT,
+    HISTORY_PREV,
+    HISTORY_BEGIN,
+    HISTORY_END
+}enHistory;
 
 extern void init_input(void);
 extern InputStates get_mouse_input(MoveCoordinates *mc);

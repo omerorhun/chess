@@ -72,6 +72,8 @@ int main() {
 		
 		InputStates ret_in = get_mouse_input(&mc);
 		
+		dlog("ret_mouse_in: %d\n", ret_in);
+		
 		if (ret_in == INPUT_READY) {
 			ErrorCodes ret = ERR_OK;
 			ret = make_move(mc);
@@ -87,6 +89,9 @@ int main() {
 				mc.from.row = 8;
 				g_turn = (g_turn == WHITE) ? BLACK : WHITE;
 			}
+		}
+		else if (ret_in == INPUT_HISTORY_MOVE) {
+			g_turn = (g_turn == WHITE) ? BLACK : WHITE;
 		}
 		
 		show_current_board();
